@@ -17,5 +17,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/email-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/content-review-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/tool-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/authz-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/entity-api"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

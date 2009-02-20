@@ -65,7 +65,17 @@
       <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-contentreview-service-api</artifactId>
       <version>${sakai.version}</version>
-    </dependency>  
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-entity-api</artifactId>
+      <version>${sakai.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-authz-api</artifactId>
+      <version>${sakai.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <resources>
