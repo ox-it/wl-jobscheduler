@@ -68,6 +68,8 @@ public class SchedulerManagerImpl implements SchedulerManager
         SCHEDULER_LOADJOBS      = "scheduler.loadjobs";
   private DataSource dataSource;
   private String serverId;
+  /** Are we running in a cluster */
+  private boolean clustered = false;
   private Set<String> qrtzJobs;
   private Map<String, String> qrtzQualifiedJobs = new TreeMap<String, String>(); // map for SelectItems
   private String qrtzPropFile;
@@ -648,6 +650,10 @@ public void init()
   public void setAutoDdl(Boolean b)
   {
     autoDdl = b;
+  }
+
+  public void setClustered(boolean clustered) {
+    this.clustered = clustered;
   }
 
    public Map<String, JobBeanWrapper> getBeanJobs() {
