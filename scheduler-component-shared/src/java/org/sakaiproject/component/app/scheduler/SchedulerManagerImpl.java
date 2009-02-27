@@ -44,6 +44,8 @@ public class SchedulerManagerImpl implements SchedulerManager
 
   private DataSource dataSource;
   private String serverId;
+  /** Are we running in a cluster */
+  private boolean clustered = false;
   private Set qrtzJobs;
   private Map qrtzQualifiedJobs = new TreeMap(); // map for SelectItems
   private String qrtzPropFile;
@@ -76,30 +78,27 @@ public void init()
       qrtzProperties = new Properties();
       qrtzProperties.load(propertiesInputStream);
 
-
-      // now replace properties from those loaded in from components.xml
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.driver",
-//          dataSource.getDriverClassName());
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.URL", dataSource
-//          .getUrl());
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.user", dataSource
-//          .getUsername());
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.password",
-//          dataSource.getPassword());
         qrtzProperties.setProperty("org.quartz.scheduler.instanceId", serverId);
 
-//      if ("hsqldb".equalsIgnoreCase(sqlService.getVendor())){
-//        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.HSQLDBDelegate"); 
-//      }
-//      else if ("mysql".equalsIgnoreCase(sqlService.getVendor())){
-//        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.StdJDBCDelegate");
-//      }
-//      else if ("oracle".equalsIgnoreCase(sqlService.getVendor())){
-//        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate");
-//      }
-//      else{
-//        LOG.warn("sakai vendor not supported");
-//      }
+      if ("hsqldb".equalsIgnoreCase(sqlService.getVendor())){
+        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.HSQLDBDelegate"); 
+      }
+      else if ("mysql".equalsIgnoreCase(sqlService.getVendor())){
+        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.StdJDBCDelegate");
+      }
+      else if ("oracle".equalsIgnoreCase(sqlService.getVendor())){
+        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate");
+      }
+      // No SQL yet but is in SAK-14978
+      else if ("db2".equalsIgnoreCase(sqlService.getVendor())){
+        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.DB2v8Delegate.class");
+      }
+      else{
+        LOG.warn("sakai vendor not supported");
+      }
+      
+      // Allow cluster config to come from sakai.properties
+      qrtzProperties.setProperty("org.quartz.jobStore.isClustered", String.valueOf(clustered));
 
       // note: becuase job classes are jarred , it is impossible to iterate
       // through a directory by calling listFiles on a file object.
@@ -327,6 +326,10 @@ public void init()
   public void setAutoDdl(Boolean b)
   {
     autoDdl = b;
+  }
+
+  public void setClustered(boolean clustered) {
+    this.clustered = clustered;
   }
 
    public Map getBeanJobs() {
