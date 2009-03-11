@@ -51,7 +51,9 @@ public class AuthzGroupProviderSync implements StatefulJob {
 				if (group.getProviderGroupId() != null && group.getProviderGroupId().length() > 0) {
 					if (System.currentTimeMillis() - group.getModifiedTime().getTime() > refreshAge) {
 						try {
-							authzGroupService.save(group);
+							// Need to load the group before we can save it.
+							AuthzGroup groupToRefresh = authzGroupService.getAuthzGroup(group.getId());
+							authzGroupService.save(groupToRefresh);
 							groupsUpdated++;
 						} catch (GroupNotDefinedException e) {
 							log.warn("Failed to update group ("+ group.getReference()+ "), maybe deleted while processing");
