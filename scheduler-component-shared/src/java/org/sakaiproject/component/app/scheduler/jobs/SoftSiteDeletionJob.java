@@ -1,0 +1,166 @@
+package org.sakaiproject.component.app.scheduler.jobs;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.api.SecurityService;
+import org.sakaiproject.authz.api.SecurityAdvisor.SecurityAdvice;
+import org.sakaiproject.component.api.ServerConfigurationService;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.site.api.SiteService.SelectionType;
+import org.sakaiproject.tool.api.Session;
+import org.sakaiproject.tool.api.SessionManager;
+
+/**
+ * <p>
+ * This job finds all sites that have been softly deleted and checks their
+ * deletion time. If it is older than site.soft.deletion.gracetime, they are
+ * then really deleted. The value is in days and defaults to 30 if not set.
+ * </p>
+ * 
+ * <p>
+ * This does not take into account whether or not site.soft.deletion is enabled
+ * since there may be sites which have been softly deleted but then the param is
+ * disabled, leaving them in limbo.
+ * </p>
+ * 
+ * @author Steve Swinsburg (steve.swinsburg@gmail.com)
+ * 
+ */
+public class SoftSiteDeletionJob implements Job {
+
+	private static final Log log = LogFactory.getLog(SoftSiteDeletionJob.class);
+
+	private final int GRACETIME_DEFAULT = 30;
+
+	private SecurityAdvisor securityAdvisor;
+	
+	public void init() {
+		// Create our security advisor.
+		securityAdvisor = new SecurityAdvisor() {
+			public SecurityAdvice isAllowed(String userId, String function,
+					String reference) {
+				return SecurityAdvice.ALLOWED;
+			}
+		};
+
+	}
+
+	public void execute(JobExecutionContext jobExecutionContext)
+			throws JobExecutionException {
+		log.info("SoftSiteDeletionJob started.");
+
+		Date graceDate = getGraceDate();
+
+		// get sites
+		List<Site> sites = siteService.getSites(SelectionType.ANY_DELETED, null, null, null, null, null);
+		log.info(sites.size() + " softly deleted site(s) will be processed");
+
+		// foreach site, check soft deletion time
+		// Note: we could do this in the SQL so we only get a list of sites that
+		// all need to be deleted.
+		// but this would no doubt be db specific so would add extra complexity
+		// to the SQL layer
+		// for now, just do it in code. There won't be many sites to process at
+		// once.
+		for (Site s : sites) {
+			log.debug("Looking at : " + s.getTitle() + " (" + s.getId() + ")");
+
+			if (!s.isSoftlyDeleted()) {
+				log.warn("Site was in returned list but isn't deleted: "
+						+ s.getId());
+				continue;
+			}
+
+			// get calendar for the softly deleted date
+			Date deletedDate = s.getSoftlyDeletedDate();
+			if (deletedDate == null) {
+				log.warn("Site doesn't have a deleted date: " + s.getId());
+				continue;
+			}
+
+			// if this deleted date is before the gracetime, delete the site.
+			if (deletedDate.before(graceDate)) {
+				log.info("Site: " + s.getId() + " is due for deletion");
+
+				try {
+					enableSecurityAdvisor();
+
+					siteService.removeSite(s);
+					log.info("Removed site: " + s.getId());
+
+				} catch (PermissionException e) {
+					log.error("Error removing site: " + s.getId() + ", "
+							+ e.getMessage());
+//				} catch (IdUnusedException e) {
+//					log.error("Error removing site: " + s.getId() + ", "
+//							+ e.getMessage());
+				} finally {
+					disableSecurityAdvisor();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Time in the past which sites deleted before can be deleted.
+	 * 
+	 * @return
+	 */
+	private Date getGraceDate() {
+		// get the gracetime config param in days.
+		int gracetime = serverConfigurationService.getInt(
+				"site.soft.deletion.gracetime", GRACETIME_DEFAULT);
+
+		// get calendar for gracetime
+		Calendar grace = Calendar.getInstance();
+		grace.add(Calendar.DATE, -gracetime);
+		Date graceDate = grace.getTime();
+		log.debug("Grace set to: " + graceDate);
+		return graceDate;
+	}
+
+	/**
+	 * Setup a security advisor for this transaction
+	 */
+	private void enableSecurityAdvisor() {
+		securityService.pushAdvisor(securityAdvisor);
+	}
+
+	/**
+	 * Remove security advisor
+	 */
+	private void disableSecurityAdvisor() {
+		securityService.popAdvisor();
+	}
+
+	private ServerConfigurationService serverConfigurationService;
+
+	public void setServerConfigurationService(
+			ServerConfigurationService serverConfigurationService) {
+		this.serverConfigurationService = serverConfigurationService;
+	}
+
+	private SiteService siteService;
+
+	public void setSiteService(SiteService siteService) {
+		this.siteService = siteService;
+	}
+
+	private SecurityService securityService;
+
+	public void setSecurityService(SecurityService securityService) {
+		this.securityService = securityService;
+	}
+
+}
