@@ -102,9 +102,9 @@ public class SoftSiteDeletionJob implements Job {
 				} catch (PermissionException e) {
 					log.error("Error removing site: " + s.getId() + ", "
 							+ e.getMessage());
-				} catch (IdUnusedException e) {
-					log.error("Error removing site: " + s.getId() + ", "
-							+ e.getMessage());
+//				} catch (IdUnusedException e) {
+//					log.error("Error removing site: " + s.getId() + ", "
+//							+ e.getMessage());
 				} finally {
 					disableSecurityAdvisor();
 				}
