@@ -7,11 +7,7 @@ import javax.faces.event.PhaseId;
 import javax.faces.event.ValueChangeEvent;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -244,14 +240,15 @@ public class EventPager
 
     public List<TriggerEvent> getEvents()
     {
+        List<TriggerEvent> events;
+
         if (isFilterEnabled())
-        {
-            return getTriggerEventManager().getTriggerEvents(after, before, jobs, triggerName, getTypes());
-        }
+            events = getTriggerEventManager().getTriggerEvents(after, before, jobs, triggerName, getTypes());
         else
-        {
-            return getTriggerEventManager().getTriggerEvents();
-        }
+            events = getTriggerEventManager().getTriggerEvents();
+
+        Collections.sort(events);
+        return events;
     }
 
 }

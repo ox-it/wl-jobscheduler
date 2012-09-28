@@ -109,4 +109,17 @@ public class TriggerEventHibernateImpl
 
         return (id.equals(that.id));
     }
+
+    public int compareTo(TriggerEvent o) {
+        int compare = - this.time.compareTo(o.getTime());
+        if (compare != 0)
+            return compare;
+
+        compare = this.jobName.compareTo(o.getJobName());
+        if (compare != 0)
+            return compare;
+
+        compare = this.triggerName.compareTo(o.getTriggerName());
+        return compare;
+    }
 }

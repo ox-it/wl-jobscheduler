@@ -9,7 +9,7 @@ import java.util.Date;
  * Time: 3:39:51 PM
  * To change this template use File | Settings | File Templates.
  */
-public interface TriggerEvent
+public interface TriggerEvent extends Comparable<TriggerEvent>
 {
     public static enum TRIGGER_EVENT_TYPE
     {
