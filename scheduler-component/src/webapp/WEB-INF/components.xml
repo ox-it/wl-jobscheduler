@@ -244,4 +244,22 @@
          <ref bean="org.sakaiproject.api.app.scheduler.SchedulerManager" />
       </property>
    </bean>
+    <bean id="org.sakaiproject.component.app.scheduler.jobs.ContentCheckJob"
+          class="org.sakaiproject.component.app.scheduler.jobs.ContentCheckJob">
+        <property name="chs" ref="org.sakaiproject.content.api.ContentHostingService"/>
+    </bean>
+
+    <bean id="org.sakaiproject.api.app.scheduler.JobBeanWrapper.ContentCheckJob"
+          class="org.sakaiproject.component.app.scheduler.jobs.SpringJobBeanWrapper"
+          singleton="true" init-method="init">
+        <property name="beanId">
+            <value>org.sakaiproject.component.app.scheduler.jobs.ContentCheckJob</value>
+        </property>
+        <property name="jobName">
+            <value>Check content in DB/Filesystem.</value>
+        </property>
+        <property name="schedulerManager">
+            <ref bean="org.sakaiproject.api.app.scheduler.SchedulerManager" />
+        </property>
+    </bean>
 </beans>
