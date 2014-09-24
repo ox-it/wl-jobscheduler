@@ -306,9 +306,9 @@
         </property>
     </bean>
 
-    <bean id="org.sakaiproject.component.app.scheduler.jobs.logmessage.LogMessageJob
-        " class="org.sakaiproject.component.app.scheduler.jobs.logmessage.LogMessageJob"
-                singleton="true">
+    <bean id="org.sakaiproject.component.app.scheduler.jobs.logmessage.LogMessageJob"
+          class="org.sakaiproject.component.app.scheduler.jobs.logmessage.LogMessageJob"
+          singleton="true">
     </bean>
 
     <bean id="org.sakaiproject.api.app.scheduler.JobBeanWrapper.LogMessageJob"
